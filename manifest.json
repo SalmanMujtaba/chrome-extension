@@ -1,0 +1,19 @@
+{
+  "name": "Visa Appointment",
+  "description": "Build an Extension!",
+  "version": "2.0",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://ais.usvisa-info.com/*"
+      ],
+      "js": [
+        "background.js"
+      ]
+    }
+  ]
+}
