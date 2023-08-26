@@ -16,20 +16,7 @@ const resc = ul[3];
 if (resc) {
   let accordion = resc.children[1];
   accordion.children[0].children[1].children[1].children[0].click();
-  // console.log(resc.lastChild.baseURI);
-  // for (let i = 0; i < resc.children.length; i++) {
-  //   console.log(resc.children[i]);
-  //   if (resc.children[i].classList.contains('accordion-content')) {
-  //     accordion = resc.children[i];
-  //     break;
-  //   }
-  //   console.log(accordion);
-  // }
-  // resc.lastChild.click();
-  // window.location.href = resc.lastChild.baseURI;
-  // resc.click();
 }
-// const li = ul.children;
 
 const input = document.getElementById('appointments_consulate_appointment_date');
 const datepicker = document.getElementsByClassName('ui-datepicker-group');
