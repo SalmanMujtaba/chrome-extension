@@ -6,6 +6,9 @@ let locationMap = new Map([
   [95, 'Vancouver'],
   [89, 'Calgary'],
 ]);
+
+const currentInverviewDate = "2025-09-25";
+
 clickLoginCheckBox();
 clickContinue();
 recheduleApt();
@@ -46,11 +49,11 @@ function processLocations() {
     const inter = setInterval(() => {
       if(!isError || index === locations.length) {
         clearInterval(inter);
+        processDatePickers();
         return;
       } else if(index !== locations.length) {
         dropDownSelection(locations[index], Array.from(dropDown.children));
         index++;
-        console.log(isError)
       }
       isError = dateTime.style.display !== 'none';
     }, 1500);
@@ -69,37 +72,113 @@ function dropDownSelection(itemtoSelect, itemList) {
   }
 }
 
-function selectDate() {
-  const datePicker = document.querySelectorAll("td");
-  if(datePicker && datePicker.length) {
-    for(let td of Array.from(datePicker)) {
-      if(td.classList && Array.from(td.classList).includes('ui-state-disabled')) {
-        console.log('disabled', td);
-        continue;
-      } else {
-        console.log(td);
-        return true;
+const isDatePickerVisible = () => {
+  const datePicker = document.getElementById('ui-datepicker-div');
+  return datePicker.style.display !=='none';
+}
+
+function processDatePickers() {
+  clickDatePicker(() => {
+    // When the datepicker is on the screen
+    if(isDatePickerVisible()) {
+      clickNextAndFindDate();
+    }
+  });
+}
+
+function clickNextAndFindDate() {
+  // Programmatically click the next button
+  const nextButton = document.querySelector(".ui-datepicker-next");
+  nextButton.click();
+
+  // Wait for a brief moment to let the calendar update
+  setTimeout(function () {
+    // Find the available date from the updated calendar
+    const availableDate = findAvailableDateFromCalendar();
+
+    if (availableDate) {
+      availableDate.click();
+      selectTime();
+    } else {
+      // If no available date found, click next and try again
+      clickNextAndFindDate();
+    }
+  }, 500); // Adjust the delay as needed
+}
+
+function findAvailableDateFromCalendar() {
+  // Select the calendar table
+  const calendarTable = document.querySelector(".ui-datepicker-calendar");
+
+  // Loop through the calendar rows and cells to find an available date
+  const rows = calendarTable.getElementsByTagName("tr");
+  for (let row of rows) {
+    const cells = row.getElementsByTagName("td");
+    for (let cell of cells) {
+      // Check if the cell is selectable (not disabled)
+      if (!cell.classList.contains("ui-datepicker-unselectable")) {
+        // Extract the date value from the cell content
+        // const date = cell.querySelector(".ui-state-default").textContent;
+        return cell;
       }
     }
   }
-  return false;
+
+  return null; // No available date found
 }
 
-function chooseLocation() {
+function clickDatePicker(callback) {
   console.log("There was no error found so the date can be selected");
   const input = document.getElementById('appointments_consulate_appointment_date').nextSibling;
   if (input) {
     setTimeout(()=> {
       input.click();
-      const next = document.getElementsByClassName('ui-datepicker-next ')[0];
-      console.log(next);
-      let count = 3;
-      setTimeout(()=>{
-        while(!selectDate() && count>=0) {
-          next.click();
-          count--;
-        }
-      }, 1000);
+      callback();
     }, 1000);
+  }
+}
+
+function selectTime() {
+  setTimeout(() => {
+    // Get the time dropdown element
+    const timeDropdown = document.getElementById("appointments_consulate_appointment_time");
+
+    // Iterate through options to find a time >= 09:00
+    for (let i = 0; i < timeDropdown.options.length; i++) {
+      const option = timeDropdown.options[i];
+      if (option.value >= "09:00") {
+        option.selected = true;
+        processInterviewSelection();
+        break;
+      }
+    }
+  }, 1000);
+}
+
+function processInterviewSelection() {
+  const disabledButton = document.getElementById('appointments_submit');
+  disabledButton.disabled = false;
+  setTimeout(() => {
+    document.getElementById('appointments_submit_action').click();
+    const revealOverlay = document.querySelector('.reveal-overlay');
+    if(revealOverlay && revealOverlay.style.display !== 'none') {
+      const cancelButton = revealOverlay.querySelector('[data-confirm-cancel]');
+      if(cancelButton) {
+        cancelButton.click();
+      }
+    }
+  }, 1000);
+}
+
+function compareDates(dateStr1, dateStr2) {
+  const date1 = new Date(dateStr1);
+  const date2 = new Date(dateStr2);
+  if (date1 > date2) {
+    return `existing date is later than ${dateStr2}`;
+    // TODO: rechedule appointment here.
+  } else if (date1 < date2) {
+    return `existing date is earlier than ${dateStr2}`;
+  } else {
+    return `existing date is equal to ${dateStr2}`;
   }
 }
