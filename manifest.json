@@ -12,7 +12,7 @@
         "https://ais.usvisa-info.com/*"
       ],
       "js": [
-        "background.js"
+        "scripts/background.js"
       ]
     }
   ]

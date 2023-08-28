@@ -1,7 +1,11 @@
 let isError = false;
 let locations = ['Toronto', 'Ottawa', 'Vancouver', 'Calgary'];
-
-
+let locationMap = new Map([
+  [94, 'Toronto'],
+  [92, 'Ottawa'],
+  [95, 'Vancouver'],
+  [89, 'Calgary'],
+]);
 clickLoginCheckBox();
 clickContinue();
 recheduleApt();
@@ -37,16 +41,18 @@ function processLocations() {
   if(window.location.href && window.location.href.includes('appointment')) {
     // let form = document.getElementById('appointment-form');
     let dropDown = document.getElementById('appointments_consulate_appointment_facility_id');
-    let isError = !!document.getElementById('consulate_date_time_not_available');
+    let dateTime = document.getElementById('consulate_date_time_not_available');
     let index = 0;
     const inter = setInterval(() => {
-      if(index !== locations.length) {
+      if(!isError || index === locations.length) {
+        clearInterval(inter);
+        return;
+      } else if(index !== locations.length) {
         dropDownSelection(locations[index], Array.from(dropDown.children));
         index++;
         console.log(isError)
-      } else if(!isError || index === locations.length){
-        clearInterval(inter);
       }
+      isError = dateTime.style.display !== 'none';
     }, 1500);
   }
 }
@@ -82,7 +88,6 @@ function selectDate() {
 function chooseLocation() {
   console.log("There was no error found so the date can be selected");
   const input = document.getElementById('appointments_consulate_appointment_date').nextSibling;
-  console.log(input);
   if (input) {
     setTimeout(()=> {
       input.click();
