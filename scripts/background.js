@@ -1,25 +1,29 @@
 let isError = false
 let locations = ['Toronto', 'Ottawa', 'Vancouver', 'Calgary']
 const currentInverviewDate = '2025-09-25'
-document.addEventListener('DOMContentLoaded', () => {
-  clickLoginCheckBox();
-  signIn();
-  clickContinue();
-  recheduleApt();
-  processLocations();
-});
+
+clickLoginCheckBox();
+signIn();
+clickContinue();
+recheduleApt();
+processLocations();
 
 function signIn() {
-  const dialog = document.getElementsByClassName('ui-dialog infoPopUp ui-widget ui-widget-content ui-front ui-dialog-buttons')[0];
-  console.log(dialog);
-  if(dialog.display !== 'none') {
-    if(dialog.querySelector('.ui-button .ui-corner-all .ui-widget')) {
-      dialog.querySelector('.ui-button .ui-corner-all .ui-widget').click();
+  if(window.location.href.includes('https://ais.usvisa-info.com/en-ca/niv/users/sign_in')) {
+    signInForm();
+    const dialogButton = document.getElementsByClassName('ui-button ui-corner-all ui-widget')[0];
+    if(dialogButton) {
+      dialogButton.click();
     }
+    setTimeout(() => {
+      document.querySelector('input[type="submit"]').click();
+      console.log('Did I click something??');
+    }, 2000);
   }
-  setTimeout(() => {
-    document.querySelector("[type='submit']").click()
-  }, 2000);
+}
+
+function signInForm() {
+  // Add user id and password.
 }
 
 function clickLoginCheckBox () {
@@ -56,6 +60,7 @@ function processLocations () {
     );
     let dateTime = document.getElementById('consulate_date_time_not_available');
     let index = 0;
+    isError = dateTime.style.display !== 'none'
     const inter = setInterval(() => {
       if (!isError || index === locations.length) {
         clearInterval(inter);
@@ -77,6 +82,7 @@ function dropDownSelection (itemtoSelect, itemList) {
         itemList[i].textContent.trim().toLocaleLowerCase() ===
         itemtoSelect.trim().toLocaleLowerCase()
       ) {
+        itemList[i].dispatchEvent(clickEvent);
         itemList[i].selected = true;
       } else {
         itemList[i].selected = false;
@@ -87,14 +93,18 @@ function dropDownSelection (itemtoSelect, itemList) {
 
 const isDatePickerVisible = () => {
   const datePicker = document.getElementById('ui-datepicker-div');
-  return datePicker.style.display !== 'none';
+  return !!datePicker.style.display && datePicker.style.display !== 'none';
 }
 
 function processDatePickers () {
   clickDatePicker(() => {
     // When the datepicker is on the screen
     if (isDatePickerVisible()) {
+      console.log('The datepicker is visible on the screen');
       clickNextAndFindDate();
+    } else {
+      console.log('The date picker is not available');
+      logOut();
     }
   })
 }
@@ -102,6 +112,9 @@ function processDatePickers () {
 function clickNextAndFindDate () {
   // Programmatically click the next button
   const nextButton = document.querySelector('.ui-datepicker-next');
+  if(!nextButton) {
+    return; 
+  }
   nextButton.click();
 
   // Wait for a brief moment to let the calendar update
@@ -111,7 +124,11 @@ function clickNextAndFindDate () {
 
     if (availableDate) {
       availableDate.click();
-      selectTime();
+      let isDateAvailable = compareDates(currentInverviewDate, document.getElementById('appointments_consulate_appointment_date').value);
+      console.log(isDateAvailable, 'is date available', document.getElementById('appointments_consulate_appointment_date').value);
+      if(isDateAvailable) {
+        selectTime();
+      }
     } else {
       // If no available date found, click next and try again
       clickNextAndFindDate();
@@ -150,6 +167,8 @@ function clickDatePicker (callback) {
       input.click();
       callback();
     }, 1000)
+  } else {
+    logOut();
   }
 }
 
@@ -158,17 +177,9 @@ function selectTime () {
     // Get the time dropdown element
     const timeDropdown = document.getElementById(
       'appointments_consulate_appointment_time'
-    );;
-
-    // Iterate through options to find a time >= 09:00
-    for (let i = 0; i < timeDropdown.options.length; i++) {
-      const option = timeDropdown.options[i];
-      if (option.value >= '09:00') {
-        option.selected = true;
-        processInterviewSelection();
-        break
-      }
-    }
+    );
+    timeDropdown.options[0].selected = true;
+    processInterviewSelection();
   }, 1000)
 }
 
@@ -191,11 +202,23 @@ function compareDates (dateStr1, dateStr2) {
   const date1 = new Date(dateStr1);
   const date2 = new Date(dateStr2);
   if (date1 > date2) {
-    return `existing date is later than ${dateStr2}`;
+    console.log(`existing date is later than ${dateStr2}`);
+    return true;
     // TODO: rechedule appointment here.
-  } else if (date1 < date2) {
-    return `existing date is earlier than ${dateStr2}`;
   } else {
-    return `existing date is equal to ${dateStr2}`;
+    logOut();
+    return false;
   }
 }
+
+const logOut = () => {
+  const result = confirm("logout");
+  result && document.querySelector("a[href='/en-ca/niv/users/sign_out']").click();
+}
+
+const clickEvent = new MouseEvent('click', {
+  bubbles: true,
+  cancelable: true,
+  view: window
+})
+
