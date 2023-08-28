@@ -1,6 +1,22 @@
 let isError = false
 let locations = ['Toronto', 'Ottawa', 'Vancouver', 'Calgary']
+let currentLocation = "";
+let currentLocationElement = null;
+let availableDateMap;
 const currentInverviewDate = '2025-09-25'
+if (window.location.href && window.location.href.includes('appointment')) {
+  class CustomMap extends Map {
+    set (key, value) {
+      if (!this.has(key)) {
+        // Execute your logic when a new value is added
+        console.log(currentLocationElement);
+        console.log(`New value added: Key: ${key}, Value: ${value}`)
+      }
+      return super.set(key, value)
+    }
+  }
+  availableDateMap = new CustomMap();
+}
 
 clickLoginCheckBox();
 signIn();
@@ -23,7 +39,7 @@ function signIn() {
 }
 
 function signInForm() {
-  // Add user id and password.
+
 }
 
 function clickLoginCheckBox () {
@@ -68,6 +84,7 @@ function processLocations () {
         return
       } else if (index !== locations.length) {
         dropDownSelection(locations[index], Array.from(dropDown.children));
+        currentLocation = locations[index];
         index++
       }
       isError = dateTime.style.display !== 'none';
@@ -82,8 +99,8 @@ function dropDownSelection (itemtoSelect, itemList) {
         itemList[i].textContent.trim().toLocaleLowerCase() ===
         itemtoSelect.trim().toLocaleLowerCase()
       ) {
-        itemList[i].dispatchEvent(clickEvent);
         itemList[i].selected = true;
+        currentLocationElement = itemList[i];
       } else {
         itemList[i].selected = false;
       }
@@ -124,8 +141,10 @@ function clickNextAndFindDate () {
 
     if (availableDate) {
       availableDate.click();
-      let isDateAvailable = compareDates(currentInverviewDate, document.getElementById('appointments_consulate_appointment_date').value);
-      console.log(isDateAvailable, 'is date available', document.getElementById('appointments_consulate_appointment_date').value);
+      const ad = document.getElementById('appointments_consulate_appointment_date').value;
+      let isDateAvailable = compareDates(currentInverviewDate, ad);
+      availableDateMap.set(currentLocation, ad);
+      console.log(isDateAvailable, 'is date available', ad);
       if(isDateAvailable) {
         selectTime();
       }
@@ -212,13 +231,6 @@ function compareDates (dateStr1, dateStr2) {
 }
 
 const logOut = () => {
-  const result = confirm("logout");
-  result && document.querySelector("a[href='/en-ca/niv/users/sign_out']").click();
-}
-
-const clickEvent = new MouseEvent('click', {
-  bubbles: true,
-  cancelable: true,
-  view: window
-})
+  // document.querySelector("a[href='/en-ca/niv/users/sign_out']").click();
+};
 
